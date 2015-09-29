@@ -23,7 +23,7 @@ end
 use_my_server = true
 
 if use_my_server
-  require_relative 'lib/http_yeah_you_know_me' # <-- probably right, but double check it
+  require_relative 'http_yeah_you_know_me' # <-- probably right, but double check it
   server = HttpYeahYouKnowMe.new(9292, NightWriterServer)
   at_exit { server.stop }
   server.start

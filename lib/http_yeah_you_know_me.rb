@@ -1,6 +1,5 @@
 require 'stringio'
 require 'socket'
-require 'pry'
 
 class HttpYeahYouKnowMe
   attr_reader :port, :app, :server
@@ -40,12 +39,11 @@ class HttpYeahYouKnowMe
 
   def write_response(env, client)
     response = @app.call(env)
-    client.print("HTTP/1.1 #{response[0]} \r\n")
-    response[1].each do |key, value|
-      client.print "#{key}: #{value}\r\n"
-    end
+    client.print("#{env['VERSION']} #{response[0]} \r\n")
+    response[1].each_pair { |key, value| client.print "#{key}: #{value}\r\n" }
     client.print("\r\n")
     client.print response[2][0]
+    client.print("\r\n")
     client.close
   end
 
