@@ -1,4 +1,5 @@
 require 'stringio'
+require 'socket'
 require 'pry'
 
 class HttpYeahYouKnowMe
@@ -10,7 +11,6 @@ class HttpYeahYouKnowMe
   end
 
   def start
-    # Wait for a request
     until server.closed?
       client = server.accept
       env = self.class.parse_request(client)
@@ -19,20 +19,26 @@ class HttpYeahYouKnowMe
   end
 
   def self.parse_request(client)
-    # Read the request
-    # parse first line
     env = {}
     first_line = client.gets.split(' ')
 
     env['REQUEST_METHOD'] = first_line[0]
     env['PATH_INFO'] = first_line[1]
     env['VERSION'] = first_line[2]
+
+    loop do
+      next_line = client.gets
+      break if next_line == "\r\n"
+      env[next_line.split(': ')[0]] = next_line.split(': ')[1].chomp
+    end
+
+    content_length = env['Content-length'].to_i
+    body = client.read(content_length)
+    env['rack.input'] = StringIO.new(body)
     env
-    #parse body
   end
 
   def write_response(env, client)
-    # Write the response
     response = @app.call(env)
     client.print("HTTP/1.1 #{response[0]} \r\n")
     response[1].each do |key, value|
@@ -44,7 +50,6 @@ class HttpYeahYouKnowMe
   end
 
   def stop
-    # I'm done now, computer ^_^
     server.close_read
     server.close_write
   end
