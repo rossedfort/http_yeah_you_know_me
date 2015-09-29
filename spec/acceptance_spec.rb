@@ -1,5 +1,6 @@
 require_relative '../lib/http_yeah_you_know_me'
 require 'rest-client' # you may need to `gem install rest-client`
+require 'pry'
 
 RSpec.describe 'Acceptance test' do
   def run_server(port, app, &block)

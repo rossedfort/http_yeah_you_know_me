@@ -1,43 +1,45 @@
-require 'socket'
+require 'stringio'
+require 'pry'
 
 class HttpYeahYouKnowMe
-  attr_accessor :port, :app, :server
+  attr_reader :port, :app, :server
   def initialize(port, app)
-    port = 9292
+    @port = port
     @app = app
     @server = TCPServer.new(port)
   end
 
   def start
     # Wait for a request
-    until server.closed? do
+    until server.closed?
       client = server.accept
-      parse_request(client)
+      env = self.class.parse_request(client)
+      write_response(env, client)
     end
   end
 
-  def parse_request(client)
+  def self.parse_request(client)
     # Read the request
-    first_line = client.gets.split(" ")
-    method = first_line[0]
-    path = first_line[1]
-    version = first_line[2]
+    # parse first line
     env = {}
-    env["REQUEST_METHOD"] = method
-    env["PATH_INFO"] = path
-    env["VERSION"] = version
-    response(env, client)
+    first_line = client.gets.split(' ')
+
+    env['REQUEST_METHOD'] = first_line[0]
+    env['PATH_INFO'] = first_line[1]
+    env['VERSION'] = first_line[2]
+    env
+    #parse body
   end
 
-  def response(env, client)
+  def write_response(env, client)
     # Write the response
-    result = app.call(env)
-    client.print("HTTP/1.1 #{result[0]} \r\n")
-    result[1].each do |key, value|
+    response = @app.call(env)
+    client.print("HTTP/1.1 #{response[0]} \r\n")
+    response[1].each do |key, value|
       client.print "#{key}: #{value}\r\n"
     end
     client.print("\r\n")
-    client.print result[2][0]
+    client.print response[2][0]
     client.close
   end
 

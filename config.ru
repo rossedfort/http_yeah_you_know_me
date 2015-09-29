@@ -20,7 +20,7 @@ end
 
 
 # switch this to use your server
-use_my_server = false
+use_my_server = true
 
 if use_my_server
   require_relative 'lib/http_yeah_you_know_me' # <-- probably right, but double check it
